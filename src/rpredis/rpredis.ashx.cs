@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Diagnostics;
 using StackExchange.Redis;
+using Serilog;
 
 namespace rpredis
 {
@@ -25,10 +26,17 @@ namespace rpredis
         {
             // Must be .Net Framework 4.5+
             System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
-
+            InitLog();
+            if (Log.Logger != null)
+            {
+                Log.Logger.Information($"request: {context.Request.Url}");
+                Log.CloseAndFlush();
+            }
             if (!InitRedis())
             {
                 context.Response.StatusCode = 500;
+                if (Log.Logger != null)
+                    Log.Logger.Error("failed to InitRedis ");
                 return;
             }
 
@@ -49,6 +57,8 @@ namespace rpredis
             if (context.Request.HttpMethod != "GET")
             {
                 context.Response.StatusCode = 500;
+                if (Log.Logger != null)
+                    Log.Logger.Error($"unsupported method: {context.Request.HttpMethod}");
                 return;
             }
 
@@ -94,9 +104,9 @@ namespace rpredis
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex.Message);
-                    // Throw 404
                     context.Response.StatusCode = 404;
+                    if (Log.Logger != null)
+                        Log.Logger.Error(ex.Message);
                     return;
                 }
                 req.UserAgent = context.Request.UserAgent;
@@ -141,7 +151,7 @@ namespace rpredis
 
                     // Copy response header
 #if enableRedis
-                    List<HashEntry> entrys = new List<HashEntry>();
+                    var entrys = new List<HashEntry>();
                     entrys.Add(new HashEntry("raw", retBuffer));
 #endif
                     for (int i = 0; i < res.Headers.Count; i++)
@@ -182,6 +192,8 @@ namespace rpredis
                 {
                     context.Response.StatusCode = 404;
                     context.Response.StatusDescription = "File not found:" + ex.Message;
+                    if (Log.Logger != null)
+                        Log.Logger.Error(ex.Message);
                     return;
                 }
             }
@@ -239,9 +251,21 @@ namespace rpredis
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                if (Log.Logger != null)
+                    Log.Logger.Error(ex.Message);
             }
             return redis != null;
+        }
+
+        private void InitLog()
+        {
+            if (Log.Logger == null)
+            {
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Information()
+                    .WriteTo.File("log.txt")
+                    .CreateLogger();
+            }
         }
     }
 }
