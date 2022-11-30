@@ -1,6 +1,6 @@
 # ReverseProxy_Redis
 sample .ashx for Reverse Proxy with Redis
-read explantion on [Medium](https://medium.com/@lag945/%E5%9C%A8windows%E6%95%B4%E5%90%88redis%E8%88%87asp-net-reverse-proxy-a846170b0353)
+read explanation on [Medium](https://medium.com/@lag945/%E5%9C%A8windows%E6%95%B4%E5%90%88redis%E8%88%87asp-net-reverse-proxy-a846170b0353)
 
 ## flow chart
 ```mermaid
