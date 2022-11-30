@@ -30,7 +30,6 @@ namespace rpredis
             if (Log.Logger != null)
             {
                 Log.Logger.Information($"request: {context.Request.Url}");
-                Log.CloseAndFlush();
             }
             if (!InitRedis())
             {
@@ -263,7 +262,7 @@ namespace rpredis
             {
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Information()
-                    .WriteTo.File("log.txt")
+                    .WriteTo.Debug()
                     .CreateLogger();
             }
         }
